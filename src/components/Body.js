@@ -1,20 +1,25 @@
-import RestoCard from "./RestoCard";
+import RestoCard, { promotedWithLabel } from "./RestoCard";
 import restList from "../../utils/mockData";
 import { useEffect, useState } from "react";
 import Shimmer from "./Shimmer";
 import { Link } from "react-router-dom";
+import useStatusOnline from "../../utils/useStatusOnline";
 
 const Body = () => {
+
     const [ restaurantList, setRestaurantList ] = useState([]);
     const [ searchText, setSearchText ] = useState("");
     const [ filteredRes, setFilteredRes ] = useState([]);
+
+    const PromotedRestaurants = promotedWithLabel(RestoCard);
+
    // whenever state variable changes/updtaes, reacts renrenders componenet or triggers reconcialition alogrithm
 
    // if no dependancy array, use effect called after every render
    // if dependancy array is empty = [] => useeffect will be called on initial render (only once)
    // if dependancy array is not empty then it will be only be called when dependency changes
+
     useEffect(() => {
-        console.log("inside useeffect")
         fetchData();
     },[]);
 
@@ -51,11 +56,15 @@ const Body = () => {
     // };
     // postData();
     // conditional rendering
+
+    const checkStatus = useStatusOnline();
+
+    if(checkStatus === false) return <h1> yours offline!! please check your internet connection</h1>
  
     return restaurantList.length === 0 ? <Shimmer/> :  (
     <div className="body">
-        <div className="filter">
-            <div className="search">
+        <div className="flex">
+            <div className="search m-4">
                 <input 
                 type="text" 
                 value={searchText} 
@@ -63,6 +72,7 @@ const Body = () => {
                     setSearchText(e.target.value);
                 }} 
                 placeholder="Search"
+                className="border border-solid border-black shadow-md p-2"
                 />
                 <button onClick=
                     {() => {
@@ -73,19 +83,26 @@ const Body = () => {
                         });
                         setFilteredRes(filteredRes);
                     }}
+                    className="m-2 px-4 py-2  bg-green-50 shadow-md"
                 >
                 Search
                 </button>
             </div>
-            <button className="filter-btn" onClick={() => {
+            <div className="flex items-center">
+            <button className="m-2 px-4 py-2 bg-gray-300 shadow-md " onClick={() => {
                 const filterData = restaurantList.filter(res => res.info.avgRating > 4);
-                setRestaurantList(filterData);
+                setFilteredRes(filterData);
             }}>
                 Top Rated Restaurants
             </button>
+            </div>
+
         </div>
-        <div className="resto-container">
-           { filteredRes.map(restaurant => <Link className="link" key={restaurant.info.id} to={"/restaurants/" +restaurant.info.id}><RestoCard  restoData={restaurant}></RestoCard></Link>)}
+        <div className="flex flex-wrap">
+           { filteredRes.map(restaurant => <Link className="link" key={restaurant.info.id} to={"/restaurants/" +restaurant.info.id}>
+            {restaurant.info.avgRating > 4.4 ? <PromotedRestaurants restoData={restaurant} /> : <RestoCard  restoData={restaurant}></RestoCard>}
+            
+            </Link>)}
          </div>
     </div>
     )
